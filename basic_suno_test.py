@@ -1,4 +1,4 @@
-# guitar_upload_automation.py
+# guitar_record_automation.py
 import asyncio
 import os
 from pathlib import Path
@@ -8,29 +8,23 @@ from browser_use.llm import ChatOpenAI
 
 load_dotenv()
 
-async def upload_guitar_to_suno(audio_file_path, extension_prompt="add drums and bass"):
-    """Upload guitar file and extend it with AI"""
+async def start_guitar_recording(extension_prompt="add drums and bass"):
+    """Start recording guitar directly in Suno"""
     
     profile_dir = str(Path.home() / ".suno_browser_profile")
     
-    # Make sure the audio file exists
-    if not Path(audio_file_path).exists():
-        print(f"❌ Audio file not found: {audio_file_path}")
-        return None
-    
     agent = Agent(
         task=f"""
-        I want to upload a guitar recording to Suno and extend it:
+        I want to set up guitar recording in Suno:
         
         1. Go to suno.com/create (I should already be logged in)
-        2. Click the "Upload" button (I can see it in the interface)
-        3. Upload this audio file: {audio_file_path}
-        4. Make sure "Instrumental" is checked/enabled 
-        5. In the song description area, enter: "Extend this guitar recording: {extension_prompt}"
-        6. Click the generate/create button to start the AI extension
-        7. Report when the generation has started
+        2. I can see options: "Upload", "Record", and "song" buttons
+        3. Click the "Record" button (the middle option, not Upload)
+        4. This should open the recording interface with a red record button and timer
+        5. Tell me when the recording interface is ready with the red button visible
+        6. Don't start recording yet - just get to the recording interface
         
-        Take your time and describe each step as you do it.
+        Report when you can see the recording interface with the red record button.
         """,
         llm=ChatOpenAI(
             model="gpt-4o-mini",
@@ -39,35 +33,34 @@ async def upload_guitar_to_suno(audio_file_path, extension_prompt="add drums and
         ),
         browser_session_config={
             "user_data_dir": profile_dir,
-            "headless": False  # Keep visible so we can watch
+            "headless": False
         }
     )
     
-    print(f"🎸 Uploading guitar file: {audio_file_path}")
-    print(f"🎵 Extension prompt: {extension_prompt}")
-    print("👀 Watch the browser - AI is working...")
-    
+    print("🎸 Setting up recording interface...")
     result = await agent.run()
-    print("\n✅ Upload process complete!")
-    print("Result:", result)
+    print("Setup result:", result)
     
     return result
 
-async def check_generation_status():
-    """Check if the generation is complete and ready for download"""
+async def record_guitar_session(duration_seconds=30):
+    """Record a guitar session for specified duration"""
     
     profile_dir = str(Path.home() / ".suno_browser_profile")
     
     agent = Agent(
-        task="""
-        Check the status of my Suno generation:
+        task=f"""
+        Record a guitar session:
         
-        1. Look at the current page for any completed tracks
-        2. Check if generation is still in progress (loading/processing indicators)
-        3. If I see a completed track with play button, that means it's done
-        4. If completed, look for download options or ways to save the audio
-        5. Report the status: "GENERATING", "COMPLETED", or "ERROR"
-        6. If completed, describe how to download/save the result
+        1. I should see the recording interface with the red record button
+        2. Click the red record button to start recording
+        3. Tell me "RECORDING STARTED - PLAY YOUR GUITAR NOW!"
+        4. Wait for exactly {duration_seconds} seconds
+        5. Click the stop button to end recording
+        6. Tell me "RECORDING STOPPED" when done
+        7. Look for any "next" or "continue" buttons to proceed
+        
+        Be precise with timing and confirm each step.
         """,
         llm=ChatOpenAI(
             model="gpt-4o-mini",
@@ -80,29 +73,35 @@ async def check_generation_status():
         }
     )
     
-    print("🔍 Checking generation status...")
+    print(f"🔴 Starting {duration_seconds}-second recording session...")
+    print("🎸 Get ready to play your guitar!")
+    
     result = await agent.run()
-    print("Status check result:", result)
+    print("Recording result:", result)
     
     return result
 
-async def download_completed_track():
-    """Download the completed track"""
+async def set_extension_prompt_and_generate(extension_prompt="add drums and bass"):
+    """Set the extension prompt and generate"""
     
     profile_dir = str(Path.home() / ".suno_browser_profile")
     
     agent = Agent(
-        task="""
-        Download my completed Suno track:
+        task=f"""
+        Set up the AI extension for my guitar recording:
         
-        1. Look for the most recent completed track
-        2. Find download options (three-dot menu, download button, or right-click)
-        3. Download the audio file
-        4. Report when download is complete and where it was saved
+        1. I should now see options after recording (prompt field, settings, etc.)
+        2. Make sure "Instrumental" is checked/enabled
+        3. In the song description/prompt field, enter: "Extend this guitar recording: {extension_prompt}"
+        4. Look for and click the generate/create button
+        5. Confirm that generation has started
+        6. Report when the AI is processing my guitar recording
+        
+        Take your time to find the right fields and buttons.
         """,
         llm=ChatOpenAI(
             model="gpt-4o-mini",
-            temperature=0.1,
+            temperature=0.2,
             api_key=os.getenv("OPENAI_API_KEY")
         ),
         browser_session_config={
@@ -111,95 +110,132 @@ async def download_completed_track():
         }
     )
     
-    print("💾 Downloading completed track...")
+    print(f"🎵 Setting extension prompt: '{extension_prompt}'")
+    print("🚀 Starting AI generation...")
+    
     result = await agent.run()
-    print("Download result:", result)
+    print("Generation result:", result)
     
     return result
 
-async def complete_guitar_workflow(audio_file_path, extension_prompt="add drums and bass"):
-    """Complete workflow: upload → wait → download"""
+async def live_guitar_jam_session(duration=30, prompt="add rock drums and bass"):
+    """Complete live guitar jam session"""
     
-    print("🎸 Starting Complete Guitar Extension Workflow")
-    print("=" * 50)
+    print("🎸 Live Guitar Jam Session with AI")
+    print("=" * 40)
+    print(f"📝 Extension prompt: {prompt}")
+    print(f"⏱️  Recording duration: {duration} seconds")
     
-    # Step 1: Upload
-    upload_result = await upload_guitar_to_suno(audio_file_path, extension_prompt)
-    if not upload_result:
-        return
+    # Step 1: Setup recording interface
+    print("\n🔧 Step 1: Setting up recording...")
+    setup_result = await start_guitar_recording()
     
-    print("\n" + "=" * 50)
-    print("⏳ Waiting for generation to complete...")
-    print("💡 This usually takes 1-3 minutes")
+    input("\n🎸 Recording interface ready! Press Enter when you're ready to record...")
     
-    # Step 2: Wait and check status
-    for attempt in range(12):  # Check every 30 seconds for 6 minutes
-        await asyncio.sleep(30)
+    # Step 2: Record guitar
+    print(f"\n🔴 Step 2: Recording for {duration} seconds...")
+    record_result = await record_guitar_session(duration)
+    
+    # Step 3: Set prompt and generate
+    print("\n🎵 Step 3: Setting up AI extension...")
+    generate_result = await set_extension_prompt_and_generate(prompt)
+    
+    print("\n🎉 Guitar jam session started!")
+    print("⏳ AI is now extending your guitar with backing instruments...")
+    print("🎵 Check Suno for your completed track in a few minutes!")
+
+async def manual_control_session():
+    """Manual control - you tell the AI when to start/stop"""
+    
+    profile_dir = str(Path.home() / ".suno_browser_profile")
+    
+    print("🎸 Manual Guitar Recording Session")
+    print("=" * 35)
+    
+    # Setup
+    await start_guitar_recording()
+    
+    while True:
+        action = input("""
+🎛️  What do you want to do?
+1. Start recording
+2. Stop recording  
+3. Set extension prompt and generate
+4. Check status
+5. Exit
+
+Choice: """)
         
-        print(f"\n🔍 Status check {attempt + 1}/12...")
-        status_result = await check_generation_status()
-        
-        status_str = str(status_result).upper()
-        if "COMPLETED" in status_str or "DONE" in status_str:
-            print("🎉 Generation completed!")
+        if action == "1":
+            agent = Agent(
+                task="Click the red record button to start recording. Tell me when recording has started.",
+                llm=ChatOpenAI(model="gpt-4o-mini", api_key=os.getenv("OPENAI_API_KEY")),
+                browser_session_config={"user_data_dir": profile_dir, "headless": False}
+            )
+            result = await agent.run()
+            print("🔴 Recording started:", result)
+            
+        elif action == "2":
+            agent = Agent(
+                task="Stop the current recording. Click the stop button and tell me when recording has stopped.",
+                llm=ChatOpenAI(model="gpt-4o-mini", api_key=os.getenv("OPENAI_API_KEY")),
+                browser_session_config={"user_data_dir": profile_dir, "headless": False}
+            )
+            result = await agent.run()
+            print("⏹️ Recording stopped:", result)
+            
+        elif action == "3":
+            prompt = input("🎵 Extension prompt: ") or "add drums and bass"
+            await set_extension_prompt_and_generate(prompt)
+            
+        elif action == "4":
+            agent = Agent(
+                task="Check the current status - is anything recording, generating, or completed?",
+                llm=ChatOpenAI(model="gpt-4o-mini", api_key=os.getenv("OPENAI_API_KEY")),
+                browser_session_config={"user_data_dir": profile_dir, "headless": False}
+            )
+            result = await agent.run()
+            print("📊 Status:", result)
+            
+        elif action == "5":
             break
-        elif "ERROR" in status_str or "FAILED" in status_str:
-            print("❌ Generation failed")
-            return
         else:
-            print("⏳ Still generating... waiting 30 more seconds")
-    else:
-        print("⚠️ Timeout reached. Check Suno manually for your track.")
-        return
-    
-    print("\n" + "=" * 50)
-    
-    # Step 3: Download
-    download_result = await download_completed_track()
-    
-    print("\n🎉 Guitar extension workflow complete!")
-    print("🎸 Your extended guitar track should be ready to jam with!")
-
-async def quick_test_upload():
-    """Quick test with a simple file"""
-    
-    # You'll need to put a real audio file here
-    test_file = "./guitar-test.m4a"  # Change this to your guitar file
-    
-    if not Path(test_file).exists():
-        print(f"❌ Please create a test file at: {test_file}")
-        print("   Or change the path in the script to your guitar recording")
-        return
-    
-    await upload_guitar_to_suno(test_file, "add rock drums and bass guitar")
+            print("Invalid choice")
 
 async def main():
     if not os.getenv("OPENAI_API_KEY"):
         print("❌ Please set OPENAI_API_KEY in your .env file")
         return
     
-    print("🎸 Suno Guitar Upload Automation")
-    print("=" * 35)
+    print("🎸 Suno Guitar Recording Automation")
+    print("=" * 40)
     
     choice = input("""
-What would you like to do?
-1. Quick test upload (upload only)
-2. Complete workflow (upload → wait → download)
-3. Check status of current generation
-4. Download completed track
+🎵 Choose your recording mode:
+
+1. Quick 30-second jam (automatic)
+2. Custom duration jam (automatic) 
+3. Manual control (you control start/stop)
+4. Just setup recording interface
 
 Choice (1-4): """)
     
     if choice == "1":
-        await quick_test_upload()
+        prompt = input("🎵 Extension prompt (or Enter for default): ") or "add rock drums and bass"
+        await live_guitar_jam_session(30, prompt)
+        
     elif choice == "2":
-        audio_file = input("📁 Path to your guitar file: ")
-        prompt = input("🎵 Extension prompt (or press Enter for default): ") or "add drums and bass"
-        await complete_guitar_workflow(audio_file, prompt)
+        duration = int(input("⏱️  Recording duration (seconds): "))
+        prompt = input("🎵 Extension prompt (or Enter for default): ") or "add rock drums and bass"
+        await live_guitar_jam_session(duration, prompt)
+        
     elif choice == "3":
-        await check_generation_status()
+        await manual_control_session()
+        
     elif choice == "4":
-        await download_completed_track()
+        await start_guitar_recording()
+        print("✅ Recording interface ready! You can now record manually.")
+        
     else:
         print("Invalid choice")
 
